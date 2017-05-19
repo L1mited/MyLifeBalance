@@ -4,33 +4,52 @@ public class QuestionObject {
 
     private int id;
 
+    private int categoryId;
+
     private String question;
 
     private String options;
 
-    private String answer;
+    public QuestionObject(){}
 
-    public QuestionObject(int id, String question, String options, String answer) {
+    public QuestionObject(int id, int categoryId, String question, String options) {
         this.id = id;
+        this.categoryId = categoryId;
         this.question = question;
         this.options = options;
-        this.answer = answer;
+
     }
 
     public int getId() {
         return id;
     }
 
+    public void setId (int id) {
+        this.id = id;
+    }
+
+    public int getCategoryId (){
+        return categoryId;
+    }
+
+    public void setCategoryId(int id){
+        this.categoryId = id;
+    }
+
     public String getQuestion() {
         return question;
+    }
+
+    public void setQuestion(String question) {
+        this.question = question;
     }
 
     public String getOptions() {
         return options;
     }
 
-    public String getAnswer() {
-        return answer;
+    public void setOptions(String options) {
+        this.options = options;
     }
 
     public String[] convertOptionsToStringArray(String options) {
@@ -38,12 +57,5 @@ public class QuestionObject {
         return allOptions;
     }
 
-    public boolean isAnswerCorrect(String[] options, String answer) {
-        for (int i = 0; i < options.length; i++) {
-            if (options[i].equals(answer)) {
-                return true;
-            }
-        }
-        return false;
-    }
+
 }

@@ -6,8 +6,14 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.inducesmile.androidmultiquiz.entities.CategoryObject;
 import com.inducesmile.androidmultiquiz.entities.Client;
+import com.inducesmile.androidmultiquiz.entities.QuestionObject;
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by Sandman on 12/05/2017.
@@ -52,8 +58,8 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // insert into tables
     private String INSERT_USERS = "INSERT INTO user (user_id, user_email, user_password) VALUES " + "('1', 'Jeremy', 'jj@pp.com'), ('2', 'James', 'james@gmail.com',)";
-    private String INSERT_CATEGORIES = "INSERT INTO category (category_id, category_name, category_image) VALUES " + "('1', 'Health and Personal Growth', 'health'), ('2', 'Money/Career', 'money'), ('3', 'Physical Environment', 'physical'), ('4', 'Relationships/Family', 'family') "
-    private String INSERT_QUIZ = "INSERT INTO quiz (quiz_id, quiz_question, quiz_options) VALUES ('1', '1', 'I feel excited about my life most of the time.', 'Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree')," +
+    private String INSERT_CATEGORIES = "INSERT INTO category (category_id, category_name, category_image) VALUES " + "('1', 'Health and Personal Growth', 'health'), ('2', 'Money/Career', 'money'), ('3', 'Physical Environment', 'physical'), ('4', 'Relationships/Family', 'family') ";
+    private String INSERT_QUIZ = "INSERT INTO quiz (quiz_id, category_id, quiz_question, quiz_options) VALUES ('1', '1', 'I feel excited about my life most of the time.', 'Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree')," +
             "('2', '1', 'I feel disengaged and fearful most of the time.', 'Strongly Agree, Agree, Neutral, Disagree, Strongly Disagree'), ('3', '1', 'I feel content and appreciate with what life has taught me.', 'Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree')," +
             "('4', '1', 'I feel stressed and overwhelmed with my daily activities.', 'Strongly Agree, Agree, Neutral, Disagree, Strongly Disagree'), ('5', '1', 'I am in full control of my health and wellness.', 'Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree')," +
             "('6', '2', 'I have a plan for my business/career and l am on track.', 'Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree'), ('7', '2', 'I am frustrated with my work/life balance.', 'Strongly Agree, Agree, Neutral, Disagree, Strongly Disagree')," +
@@ -105,48 +111,214 @@ public class DBHandler extends SQLiteOpenHelper {
         db.close();
     }
 
-    public void addCategory(Category category) {
+    public void addCategory(CategoryObject category) {
         //Create ContentValues Object to hold data
         ContentValues values = new ContentValues();
         values.put(COLUMN_CATEGORY_ID, category.getId());
         //Assign client name to object taken from passed Client object
-        values.put(COLUMN_CATEGORY_NAME, category.getName());
+        values.put(COLUMN_CATEGORY_NAME, category.getQuizCategoryName());
         //Assign email to object taken from passed Client object
-        values.put(COLUMN_CATEGORY_IMAGE, category.getImage());
+        values.put(COLUMN_CATEGORY_IMAGE, category.getQuizCategoryImagePath());
         //Create DB object and assign current object to it
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(TABLE_CATEGORY, null, values);
         db.close();
     }
 
-    public void addQuiz(Quiz quiz) {
+    public void addQuiz(QuestionObject quiz) {
         //Create ContentValues Object to hold data
         ContentValues values = new ContentValues();
         values.put(COLUMN_QUIZ_ID, quiz.getId());
+        values.put(COLUMN_CATEGORY_ID, quiz.getCategoryId());
         //Assign client name to object taken from passed Client object
-        values.put(COLUMN_QUIZ_OPTIONS, quiz.getName());
+        values.put(COLUMN_QUIZ_OPTIONS, quiz.getOptions());
         //Assign email to object taken from passed Client object
-        values.put(COLUMN_QUIZ_QUESTION, quiz.getImage());
+        values.put(COLUMN_QUIZ_QUESTION, quiz.getQuestion());
         //Create DB object and assign current object to it
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(TABLE_QUIZ, null, values);
         db.close();
     }
 
-    public Client findAllClients() {
-        String query = "SELECT * FROM " + TABLE_USER;
-        SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.rawQuery(query, null);
-        Client client = new Client();
-        if(cursor.moveToFirst()) {
-            cursor.moveToFirst();
-            client.setName(cursor.getString(1));
-            client.setEmail(cursor.getString(2));
-            cursor.close();
-        } else {
-            client = null;
+
+    public List<Client> getAllClient() {
+        // array of columns to fetch
+        String[] columns = {
+                COLUMN_USER_ID,
+                COLUMN_USER_EMAIL,
+                COLUMN_USER_NAME,
+        };
+        // sorting orders
+        String sortOrder =
+                COLUMN_USER_NAME + " ASC";
+        List<Client> clientList = new ArrayList<Client>();
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // query the user table
+        /**
+         * Here query function is used to fetch records from user table this function works like we use sql query.
+         * SQL query equivalent to this query function is
+         * SELECT user_id,user_name,user_email,user_password FROM user ORDER BY user_name;
+         */
+        Cursor cursor = db.query(TABLE_USER, //Table to query
+                columns,    //columns to return
+                null,        //columns for the WHERE clause
+                null,        //The values for the WHERE clause
+                null,       //group the rows
+                null,       //filter by row groups
+                sortOrder); //The sort order
+
+
+        // Traversing through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                Client client = new Client();
+                client.setId(Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_USER_ID))));
+                client.setName(cursor.getString(cursor.getColumnIndex(COLUMN_USER_NAME)));
+                client.setEmail(cursor.getString(cursor.getColumnIndex(COLUMN_USER_EMAIL)));
+                // Adding user record to list
+                clientList.add(client);
+            } while (cursor.moveToNext());
         }
+        cursor.close();
         db.close();
-        return client;
+
+        // return user list
+        return clientList;
+    }
+
+    public List<CategoryObject> getAllCategories() {
+        // array of columns to fetch
+        String[] columns = {
+                COLUMN_CATEGORY_ID,
+                COLUMN_CATEGORY_IMAGE,
+                COLUMN_CATEGORY_NAME,
+        };
+        // sorting orders
+        String sortOrder =
+                COLUMN_CATEGORY_ID + " ASC";
+        List<CategoryObject> categoryList = new ArrayList<CategoryObject>();
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // query the user table
+        /**
+         * Here query function is used to fetch records from user table this function works like we use sql query.
+         * SQL query equivalent to this query function is
+         * SELECT user_id,user_name,user_email,user_password FROM user ORDER BY user_name;
+         */
+        Cursor cursor = db.query(TABLE_CATEGORY, //Table to query
+                columns,    //columns to return
+                null,        //columns for the WHERE clause
+                null,        //The values for the WHERE clause
+                null,       //group the rows
+                null,       //filter by row groups
+                sortOrder); //The sort order
+
+
+        // Traversing through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                CategoryObject categoryObject = new CategoryObject();
+                categoryObject.setId(Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_CATEGORY_ID))));
+                categoryObject.setQuizCategoryName(cursor.getString(cursor.getColumnIndex(COLUMN_CATEGORY_NAME)));
+                categoryObject.setQuizCategoryImagePath(cursor.getString(cursor.getColumnIndex(COLUMN_CATEGORY_IMAGE)));
+                // Adding user record to list
+                categoryList.add(categoryObject);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+
+        // return user list
+        return categoryList;
+    }
+
+    public List<QuestionObject> getAllQuestions() {
+        // array of columns to fetch
+        String[] columns = {
+                COLUMN_QUIZ_ID,
+                COLUMN_CATEGORY_ID,
+                COLUMN_QUIZ_OPTIONS,
+                COLUMN_QUIZ_QUESTION,
+        };
+        // sorting orders
+        String sortOrder =
+                COLUMN_QUIZ_ID + " ASC";
+        List<QuestionObject> questionList = new ArrayList<QuestionObject>();
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // query the user table
+        /**
+         * Here query function is used to fetch records from user table this function works like we use sql query.
+         * SQL query equivalent to this query function is
+         * SELECT user_id,user_name,user_email,user_password FROM user ORDER BY user_name;
+         */
+        Cursor cursor = db.query(TABLE_QUIZ, //Table to query
+                columns,    //columns to return
+                null,        //columns for the WHERE clause
+                null,        //The values for the WHERE clause
+                null,       //group the rows
+                null,       //filter by row groups
+                sortOrder); //The sort order
+
+
+        // Traversing through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                QuestionObject questionObject = new QuestionObject();
+                questionObject.setId(Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_QUIZ_ID))));
+                questionObject.setCategoryId(Integer.parseInt(cursor.getString(cursor.getColumnIndex(COLUMN_CATEGORY_ID))));
+                questionObject.setOptions(cursor.getString(cursor.getColumnIndex(COLUMN_QUIZ_OPTIONS)));
+                questionObject.setQuestion(cursor.getString(cursor.getColumnIndex(COLUMN_QUIZ_QUESTION)));
+                // Adding user record to list
+                questionList.add(questionObject);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+
+        // return user list
+        return questionList;
+    }
+
+    public boolean checkClient(String email) {
+
+        // array of columns to fetch
+        String[] columns = {
+                COLUMN_USER_ID
+        };
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // selection criteria
+        String selection = COLUMN_USER_EMAIL + " = ?";
+
+        // selection argument
+        String[] selectionArgs = {email};
+
+        // query user table with condition
+        /**
+         * Here query function is used to fetch records from user table this function works like we use sql query.
+         * SQL query equivalent to this query function is
+         * SELECT user_id FROM user WHERE user_email = 'jack@androidtutorialshub.com';
+         */
+        Cursor cursor = db.query(TABLE_USER, //Table to query
+                columns,                    //columns to return
+                selection,                  //columns for the WHERE clause
+                selectionArgs,              //The values for the WHERE clause
+                null,                       //group the rows
+                null,                      //filter by row groups
+                null);                      //The sort order
+        int cursorCount = cursor.getCount();
+        cursor.close();
+        db.close();
+
+        if (cursorCount > 0) {
+            return true;
+        }
+
+        return false;
     }
 }

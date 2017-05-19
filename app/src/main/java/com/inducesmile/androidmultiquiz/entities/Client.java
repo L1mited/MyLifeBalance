@@ -5,12 +5,14 @@ package com.inducesmile.androidmultiquiz.entities;
  */
 
 public class Client {
+    private int id;
     private String name;
     private String email;
 
     public Client() {}
 
-    public Client(String name, String email) {
+    public Client(int id, String name, String email) {
+        this.id = id;
         this.name = name;
         this.email = email;
     }
@@ -23,6 +25,13 @@ public class Client {
         this.name = name;
     }
 
+    public int getId()  {
+        return id;
+    }
+
+    public void setId(int id)   {
+        this.id = id;
+    }
     public String getEmail() {
         return email;
     }
