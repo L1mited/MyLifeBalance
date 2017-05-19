@@ -12,12 +12,18 @@ public class QuestionObject {
 
     public QuestionObject(){}
 
+
+    public QuestionObject(int categoryId, String question, String options) {
+        this.categoryId = categoryId;
+        this.question = question;
+        this.options = options;
+    }
+
     public QuestionObject(int id, int categoryId, String question, String options) {
         this.id = id;
         this.categoryId = categoryId;
         this.question = question;
         this.options = options;
-
     }
 
     public int getId() {
